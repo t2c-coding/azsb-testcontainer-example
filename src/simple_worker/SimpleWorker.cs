@@ -4,11 +4,13 @@ using Azure.Messaging.ServiceBus;
 
 namespace simple_worker;
 
-public class SimpleWorker
+public class SimpleWorker : IAsyncDisposable
 {
     private readonly string _cstring;
     private readonly string _topic;
     private readonly string _subscription;
+    private ServiceBusReceiver? _receiver;
+    private ServiceBusSender? _sender;
 
     public SimpleWorker(string servicebusConnectionString, string topic, string subscription)
     {
@@ -17,30 +19,39 @@ public class SimpleWorker
         _subscription = subscription;
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        if(_receiver != null) await _receiver.DisposeAsync();
+        if(_sender != null) await _sender.DisposeAsync();
+
+        Debug.WriteLine("SimpleWorker disposed");
+
+    }
+
     public async Task ReceiveAndReplyToMessagesAsync(CancellationToken stoppingToken = default)
     {
         await using var client = new ServiceBusClient(_cstring);
-        var receiverOptions = new ServiceBusReceiverOptions
+        var _receiverOptions = new ServiceBusReceiverOptions
         {
             ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete
         };
 
-        ServiceBusReceiver receiver = client.CreateReceiver(_topic, _subscription, receiverOptions);
-        ServiceBusSender sender = client.CreateSender(_topic);
+        _receiver = client.CreateReceiver(_topic, _subscription, _receiverOptions);
+        _sender = client.CreateSender(_topic);
 
         try
         {
-            var messages = await receiver.ReceiveMessagesAsync(maxMessages: 100, maxWaitTime: TimeSpan.FromSeconds(1));
+            var messages = await _receiver.ReceiveMessagesAsync(maxMessages: 100, maxWaitTime: TimeSpan.FromSeconds(1));
             foreach (var message in messages)
             {
                 if (message.Body != null)
                 {
                     var body = Encoding.UTF8.GetString(message.Body.ToArray());
                     Debug.WriteLine($"Received message: {body}");
-                    
+
                     var msg = new ServiceBusMessage("World!");
                     msg.CorrelationId = message.MessageId;
-                    await sender.SendMessageAsync(msg);
+                    await _sender.SendMessageAsync(msg);
                     Debug.WriteLine("Sent reply message back!");
                 }
             }
@@ -51,12 +62,10 @@ public class SimpleWorker
         }
         finally
         {
-            await receiver.CloseAsync();
-            await receiver.DisposeAsync();
+            await _receiver.CloseAsync();
 
-            await sender.CloseAsync();
-            await sender.DisposeAsync();
-            Debug.WriteLine("Receiver closed.");
+            await _sender.CloseAsync();
+            Debug.WriteLine("_receiver closed.");
         }
 
     }

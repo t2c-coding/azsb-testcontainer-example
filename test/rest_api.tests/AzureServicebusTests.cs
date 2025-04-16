@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -50,6 +49,7 @@ internal class ServiceBusHelper : IAsyncDisposable
         if (_receiver != null)
         {
             await _receiver.CloseAsync();
+            await _receiver.DisposeAsync();
         }
     }
 

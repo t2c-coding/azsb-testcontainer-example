@@ -1,6 +1,4 @@
 using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
