@@ -25,7 +25,7 @@ public class AzureServicebusTests(AzureServicebusFixture fixture) : IClassFixtur
         var messages = await sbHelper.TryConsumeMessagesAsync();
         Assert.Equal(200, (int)response.StatusCode);
         Assert.Single(messages);
-        Assert.Equal("World!", Encoding.UTF8.GetString(messages.First().Body));
+        Assert.Equal("'Hello!'", Encoding.UTF8.GetString(messages.First().Body));
         Assert.Equal(await response.Content.ReadAsStringAsync(), $"\"{messages.First().CorrelationId}\"");
     }
 }

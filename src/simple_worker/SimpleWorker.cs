@@ -49,7 +49,8 @@ public class SimpleWorker : IAsyncDisposable
                     var body = Encoding.UTF8.GetString(message.Body.ToArray());
                     Debug.WriteLine($"Received message: {body}");
 
-                    var msg = new ServiceBusMessage("World!");
+                    var instruction = body.Substring(4, body.Length - 4);
+                    var msg = new ServiceBusMessage(instruction);
                     msg.CorrelationId = message.MessageId;
                     await _sender.SendMessageAsync(msg);
                     Debug.WriteLine("Sent reply message back!");

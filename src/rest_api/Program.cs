@@ -29,7 +29,7 @@ if (app.Environment.IsDevelopment())
 app.MapPost("/sendhellocommand", async (IAzureClientFactory<ServiceBusSender> senderFactory)  =>
 {
     var sender = senderFactory.CreateClient("topic.1");
-    var msg = new ServiceBusMessage("Hello"); 
+    var msg = new ServiceBusMessage("Say:'Hello!'"); 
     msg.MessageId = Guid.NewGuid().ToString();
 
     await sender.SendMessageAsync(msg);
